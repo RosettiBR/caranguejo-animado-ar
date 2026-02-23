@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Projeto AR - Carangueijo Animado</title>
+  
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
+  
+  <style>body{margin:0;overflow:hidden}</style>
+
+  <script>
+    // Animação com reinicialização a cada click
+    AFRAME.registerComponent('animar-ao-clicar', {
+      init: function () {
+        this.el.addEventListener('click', () => {
+          // não ser acionado caso ja tenha uma animação em andamento
+          if (this.el.getAttribute('animation-mixer')) return;
+
+          console.log("Play na animação!");
+          
+          //  a animação
+          this.el.setAttribute('animation-mixer', {
+            clip: 'Animation', 
+            loop: 'once', 
+            clampWhenFinished: true
+          });
+        });
+
+        // "resetando" o componente para sempre ser acionado ao clicar
+        this.el.addEventListener('animation-finished', () => {
+          console.log("Animação acabou. Resetando...");
+          this.el.removeAttribute('animation-mixer');
+        });
+      }
+    });
+
+    // Animação de escala, vou usar multiplicação pois ele sempre vai funcionar independente do tamanho do objeto
+    AFRAME.registerComponent('efeito-botao', {
+      init: function () {
+        // Pressionou 
+        let down = () => {
+          this.el.object3D.scale.multiplyScalar(1.4); // Aumenta 40% do tamanho ATUAL
+        };
+        
+        // Soltou 
+        let up = () => {
+          this.el.object3D.scale.divideScalar(1.4); // Divide por 1.4 para voltar ao tamanho exato
+        };
+
+        //  para PC e Celular
+        this.el.addEventListener('mousedown', down);
+        this.el.addEventListener('touchstart', down);
+        
+        this.el.addEventListener('mouseup', up);
+        this.el.addEventListener('touchend', up);
+      }
+    });
+  </script>
+</head>
+
+<body style="margin: 0; overflow: hidden;">
+  
+  <a-scene 
+    embedded 
+    arjs="sourceType: webcam; debugUIEnabled: false;" 
+    renderer="logarithmicDepthBuffer: true; colorManagement: true;"
+    vr-mode-ui="enabled: false"
+    gesture-detector>
+
+    <a-assets>
+      <a-asset-item id="modelo-animado" src="QS1726-E4-W01-1-1_animation.glb"></a-asset-item>
+    </a-assets>
+
+    <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .tocavel"></a-entity>
+
+    <a-marker preset="hiro" emitevents="true">
+      
+      <a-light type="ambient" color="#ffffff" intensity="0.3"></a-light>
+      <a-light type="directional" color="#ffffff" intensity="2.5" position="2 4 5"></a-light>
+
+      <a-entity 
+        id="meu-modelo"
+        class="tocavel" 
+        gltf-model="#modelo-animado"
+        scale="0.5 0.5 0.5" 
+        position="0 0 0"
+        gesture-handler="minScale: 0.1; maxScale: 5"
+        animar-ao-clicar
+        efeito-botao>
+      </a-entity>
+
+    </a-marker>
+  </a-scene>
+</body>
+</html>
